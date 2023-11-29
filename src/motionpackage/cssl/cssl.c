@@ -200,7 +200,7 @@ cssl_t *cssl_open(const char *fname,
 
     /* then set the callback */
     serial->callback=callback;
-    
+    printf("callback: %d\n", callback);
     /* we add the serial to our list */
     serial->next=head;
     head=serial;

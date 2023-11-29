@@ -1,8 +1,32 @@
-import serial.tools.list_ports
+# Usart Library
+import serial
+import struct
+import binascii
 
-# 获取可用串口列表
-ports = serial.tools.list_ports.comports()
+# Init serial port
+Usart = serial.Serial(
+    port='/dev/ttyUSB0',  # 串口
+    baudrate=115200,  # 波特率
+    timeout=0.001)  # 讀取超時時間
+def main():
+    # 判断串口是否打开成功
+    if Usart.isOpen():
+        print("open success")
+    else:
+        print("open failed")
 
-# 打印每个串口的信息
-for port, desc, hwid in sorted(ports):
-    print(f"串口名: {port}, 描述: {desc}, 硬件标识符: {hwid}")
+    # ----读取串口数据-----------------------------------
+    try:
+        count = Usart.in_waiting  # 获取串口缓冲区数据
+        if count > 0:
+            # 初始化数据
+            Read_buffer = []
+            # 接收数据至缓存区
+            Read_buffer = Usart.read(40)  # 读取40个字节的数据
+    except KeyboardInterrupt:
+        if Usart != None:
+            print("close serial port")
+            Usart.close()
+#--------------------------------------------------------
+if __name__ == '__main__':
+    main()

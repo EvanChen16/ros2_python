@@ -1202,48 +1202,34 @@
 #     main()
 import ctypes
 
-# 定義 C 結構體在 Python 中的對應
-# class cssl_t(ctypes.Structure):
-#     _fields_ = [
-#         ("buffer", ctypes.c_uint8 * 255),
-#         ("fd", ctypes.c_int),
-#         ("tio", ctypes.c_char * 36),  # 這裡的大小需要根據你的 C 結構中 tio 的具體定義修改
-#         ("oldtio", ctypes.c_char * 36),  # 這裡的大小需要根據你的 C 結構中 oldtio 的具體定義修改
-#         ("callback", ctypes.c_void_p),
-#         ("id", ctypes.c_int),
-#         ("next", ctypes.POINTER(cssl_t))
-#     ]
+# 創建回調函數的 CFUNCTYPE
+def callback_func(id, buffer, length):
+    # 在這裡處理收到的數據
+    print(f"Received data: {buffer[:length].hex()}")  # 假設數據是以字節形式顯示
+    # 在這裡添加你希望做的其他處理
 
-lib = ctypes.CDLL('/home/iclab/motion/src/motionpackage/cssl/libcssl.so')
-
-cssl_callback_t = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.POINTER(ctypes.c_uint8), ctypes.c_int)
-
-# 定義 C 函數的參數類型
-lib.cssl_open.argtypes = [ctypes.c_char_p, cssl_callback_t, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int]
-lib.cssl_getdata.argtypes = [ctypes.POINTER(cssl_t), ctypes.POINTER(ctypes.c_uint8), ctypes.c_int]
-
-BUFFER_SIZE = 128  # 數據緩衝區的大小，自行調整
-
-# 定義回調函數
-# def callback(id, buffer, length):
-#     print(f"Callback: ID={id}, Data={buffer[:length].decode('utf-8')}")
-
-# 設置回調函數
-callback_func = cssl_callback_t(callback)
-
-# 打開串行端口
-serial = lib.cssl_open(b"/dev/ttyS0", callback_func, 0, 115200, 8, 0, 1)
-
-if serial:
-    # 進行數據讀取
-    data_buffer = (ctypes.c_uint8 * BUFFER_SIZE)()
-    data_size = lib.cssl_getdata(serial, data_buffer, BUFFER_SIZE)
-    if data_size > 0:
-        print(f"Read {data_size} bytes: {data_buffer[:data_size]}")
+def main():
+    lib = ctypes.CDLL('/home/iclab/motion/src/motionpackage/cssl/libcssl.so')
     
-    # 關閉串口
-    lib.cssl_close(serial)
-else:
-    print("Failed to open serial port")
+    # 設置回調函數的類型
+    cssl_callback_t = ctypes.CFUNCTYPE(None, ctypes.c_int, ctypes.POINTER(ctypes.c_uint8), ctypes.c_int)
+    
+    # 創建回調函數的實例
+    callback_instance = cssl_callback_t(callback_func)
+    # print(serial)
+    # 打開串行端口
+    # serial = lib.cssl_open(b"/dev/ttyS0", callback_instance, 0, 115200, 8, 0, 1)
+    print(lib.cssl_open(b"/dev/ttyS0", callback_instance, 0, 115200, 8, 0, 1))
+    # if serial:
+    #     print("Opened serial port successfully")
+    #     # 在這裡進行數據讀取和其他操作
+    #     # 關閉串口
+    #     lib.cssl_close(serial)
+    # else:
+    #     print("Failed to open serial port")
+
+if __name__ == '__main__':
+    main()
+
 
 
